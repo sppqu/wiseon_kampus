@@ -14,7 +14,9 @@ use App\Models\AsistenDosen;
 use App\Models\KelasKuliah;
 use App\Models\FeederConfig;
 use Illuminate\Http\Request;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -46,6 +48,12 @@ class MasterDataController extends Controller
 
     public function updatePerguruanTinggi(Request $request)
     {
+        if (!Schema::hasColumn('perguruan_tinggis', 'logo')) {
+            Schema::table('perguruan_tinggis', function (Blueprint $table) {
+                $table->string('logo')->nullable()->after('singkatan');
+            });
+        }
+
         $pt = PerguruanTinggi::firstOrFail();
 
         $validated = $request->validate([
