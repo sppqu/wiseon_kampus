@@ -57,8 +57,8 @@
     <!-- Container Utama Mobile (Khusus Layar Smartphone) -->
     <div class="w-full max-w-md bg-slate-50 min-h-screen flex flex-col relative shadow-2xl overflow-x-hidden">
 
-        <!-- Top Header Mobile App (Murni Mobile, Tanpa Tombol Web) -->
-        <header class="bg-gradient-to-r from-[#113f6c] via-[#154e85] to-[#1e61a3] text-white p-4 pt-5 pb-5 rounded-b-3xl shadow-lg relative z-20">
+        <!-- Top Header Mobile App (Hanya tampil pada Beranda / Home) -->
+        <header id="mobileMainHeader" class="bg-gradient-to-r from-[#113f6c] via-[#154e85] to-[#1e61a3] text-white p-4 pt-5 pb-5 rounded-b-3xl shadow-lg relative z-20">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-amber-300 font-extrabold text-sm shadow-inner">
@@ -114,7 +114,7 @@
         </header>
 
         <!-- Flash Message Alerts -->
-        <div class="px-4 -mt-2 z-30">
+        <div id="mobileAlertWrapper" class="px-4 -mt-2 z-30">
             @if(session('success'))
                 <div class="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg text-xs font-semibold flex items-center gap-2.5 animate-bounce">
                     <i class="fa-solid fa-circle-check text-base"></i>
@@ -332,18 +332,10 @@
                     <!-- Hidden Canvas for Snapshot Capture -->
                     <canvas id="snapshotCanvas" class="hidden"></canvas>
 
-                    <!-- Status Foto Selfie & Tombol Aksi Kamera (Tanpa Tombol File) -->
-                    <div class="mt-3.5 space-y-2">
+                    <!-- Status Foto Selfie (Otomatis Terambil Saat Klik Masuk / Pulang) -->
+                    <div class="mt-3.5">
                         <div id="selfieStatusBadge" class="text-[11px] text-slate-500 font-medium">
-                            Arahkan wajah ke dalam lingkaran lalu klik tombol di bawah
-                        </div>
-
-                        <div class="flex items-center justify-center gap-2">
-                            <!-- Tombol Ambil Foto Utama -->
-                            <button type="button" id="btnCaptureSelfie" onclick="ambilFotoSelfie()" class="w-full max-w-xs py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2 active:scale-95">
-                                <i class="fa-solid fa-camera text-sm"></i>
-                                <span id="btnCaptureText">Ambil Foto Selfie</span>
-                            </button>
+                            Arahkan wajah ke dalam lingkaran. Foto otomatis tersimpan saat klik Masuk / Pulang.
                         </div>
                     </div>
                 </div>
@@ -721,7 +713,7 @@
                 <div class="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-center">
                     <div class="text-xs font-bold text-rose-800">Keluar dari Sesi Aplikasi</div>
                     <div class="text-[10px] text-rose-600 mt-0.5 mb-3">Pastikan Anda telah melakukan presensi pulang sebelum keluar.</div>
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('logout', ['from' => 'mobile']) }}" method="POST">
                         @csrf
                         <button type="submit" onclick="return confirm('Apakah Anda yakin ingin keluar dari aplikasi presensi?')" class="w-full py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-sm active:scale-95 transition flex items-center justify-center gap-1.5">
                             <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -793,6 +785,25 @@
 
             const activeEl = document.getElementById(tabId);
             if (activeEl) activeEl.classList.remove('hidden');
+
+            // Tampilkan header HANYA pada tab Beranda (tabHome)
+            const mainHeader = document.getElementById('mobileMainHeader');
+            const alertWrapper = document.getElementById('mobileAlertWrapper');
+            if (mainHeader) {
+                if (tabId === 'tabHome') {
+                    mainHeader.classList.remove('hidden');
+                    if (alertWrapper) {
+                        alertWrapper.classList.add('-mt-2');
+                        alertWrapper.classList.remove('mt-3');
+                    }
+                } else {
+                    mainHeader.classList.add('hidden');
+                    if (alertWrapper) {
+                        alertWrapper.classList.remove('-mt-2');
+                        alertWrapper.classList.add('mt-3');
+                    }
+                }
+            }
 
             // Reset style bottom nav icons
             const navItems = {
@@ -987,6 +998,7 @@
 
         async function initCamera() {
             const video = document.getElementById('webcamVideo');
+            const statusBadge = document.getElementById('selfieStatusBadge');
             if (!video) return;
 
             // Jika sudah ada stream aktif, jangan recreate
@@ -1005,28 +1017,27 @@
                     audio: false
                 });
                 video.srcObject = mediaStream;
-                video.play().catch(e => console.log('Autoplay deferred:', e));
+                await video.play().catch(e => console.log('Autoplay deferred:', e));
+                if (statusBadge) {
+                    statusBadge.innerHTML = '<span class="text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check"></i> Kamera aktif — foto otomatis tersimpan saat klik Masuk / Pulang</span>';
+                }
             } catch (err) {
                 console.log('Live camera not permitted or sandbox:', err);
-                const statusBadge = document.getElementById('selfieStatusBadge');
                 if (statusBadge) {
                     statusBadge.innerHTML = '<span class="text-amber-600 font-semibold"><i class="fa-solid fa-triangle-exclamation"></i> Izinkan akses kamera browser pada ponsel Anda</span>';
                 }
             }
         }
 
-        function ambilFotoSelfie() {
+        function captureAutomaticSelfie() {
             const video = document.getElementById('webcamVideo');
             const canvas = document.getElementById('snapshotCanvas');
             const snapshotImg = document.getElementById('capturedSnapshot');
             const scanner = document.getElementById('scannerLine');
-            const btnText = document.getElementById('btnCaptureText');
             const statusBadge = document.getElementById('selfieStatusBadge');
 
-            // Jika tombol sedang dalam status 'Foto Ulang'
             if (capturedBase64) {
-                restartCamera();
-                return;
+                return true;
             }
 
             if (video && (video.videoWidth > 0 || video.readyState >= 2)) {
@@ -1037,33 +1048,32 @@
 
                 capturedBase64 = canvas.toDataURL('image/jpeg', 0.88);
 
-                snapshotImg.src = capturedBase64;
-                snapshotImg.classList.remove('hidden');
+                if (snapshotImg) {
+                    snapshotImg.src = capturedBase64;
+                    snapshotImg.classList.remove('hidden');
+                }
                 video.classList.add('hidden');
                 if (scanner) scanner.classList.add('hidden');
 
-                // Isi ke hidden input form clock-in & clock-out
+                // Isi otomatis ke hidden input form clock-in & clock-out
                 const bIn = document.getElementById('fotoBase64In');
                 if (bIn) bIn.value = capturedBase64;
                 const bOut = document.getElementById('fotoBase64Out');
                 if (bOut) bOut.value = capturedBase64;
 
-                if (btnText) btnText.innerHTML = '<i class="fa-solid fa-arrows-rotate mr-1"></i> Foto Ulang (Retake)';
                 if (statusBadge) {
-                    statusBadge.innerHTML = '<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> Foto selfie siap digunakan untuk presensi</span>';
+                    statusBadge.innerHTML = '<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check"></i> Foto selfie otomatis diambil, memproses presensi...</span>';
                 }
-            } else {
-                // Fallback jika kamera perangkat belum siap / diblokir
-                alert('Kamera depan sedang menginisialisasi atau belum diizinkan. Silakan beri izin kamera pada browser.');
-                initCamera();
+                return true;
             }
+
+            return false;
         }
 
         function restartCamera() {
             const video = document.getElementById('webcamVideo');
             const snapshotImg = document.getElementById('capturedSnapshot');
             const scanner = document.getElementById('scannerLine');
-            const btnText = document.getElementById('btnCaptureText');
             const statusBadge = document.getElementById('selfieStatusBadge');
 
             if (video) video.classList.remove('hidden');
@@ -1076,18 +1086,17 @@
             const bOut = document.getElementById('fotoBase64Out');
             if (bOut) bOut.value = '';
 
-            if (btnText) btnText.innerText = 'Ambil Foto Selfie';
             if (statusBadge) {
-                statusBadge.innerText = 'Arahkan wajah ke dalam lingkaran lalu klik tombol di bawah';
+                statusBadge.innerText = 'Arahkan wajah ke dalam lingkaran. Foto otomatis tersimpan saat klik Masuk / Pulang.';
             }
 
             initCamera();
         }
 
         function validateBeforeSubmit(type) {
-            if (!capturedBase64) {
-                alert('Harap ambil foto selfie wajah menggunakan kamera depan terlebih dahulu sebelum melakukan presensi!');
-                ambilFotoSelfie();
+            if (!captureAutomaticSelfie()) {
+                alert('Kamera depan sedang menginisialisasi atau belum diizinkan. Silakan beri izin kamera pada browser terlebih dahulu.');
+                initCamera();
                 return false;
             }
             return true;

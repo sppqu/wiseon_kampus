@@ -312,4 +312,75 @@ class PresensiBkdTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('LAPORAN REKAPITULASI KEHADIRAN DOSEN');
     }
+
+    public function test_dosen_bisa_login_menggunakan_nomor_hp_dan_password_6_digit_terakhir(): void
+    {
+        $dosen = Dosen::first();
+        $cleanPhone = preg_replace('/[^0-9]/', '', $dosen->no_hp);
+        $sixDigits = substr($cleanPhone, -6);
+
+        $response = $this->post('/login', [
+            'login' => $dosen->no_hp,
+            'password' => $sixDigits,
+        ]);
+
+        $response->assertRedirect('/dosen/dashboard');
+        $this->assertAuthenticatedAs($dosen->user);
+    }
+
+    public function test_dosen_bisa_login_hanya_menginput_nomor_hp_tanpa_password(): void
+    {
+        $dosen = Dosen::where('no_hp', '!=', '')->skip(1)->first() ?: Dosen::first();
+
+        $response = $this->post('/login', [
+            'login' => $dosen->no_hp,
+            'password' => '',
+        ]);
+
+        $response->assertRedirect('/dosen/dashboard');
+        $this->assertAuthenticatedAs($dosen->user);
+    }
+
+    public function test_login_nomor_hp_gagal_jika_tidak_terdaftar(): void
+    {
+        $response = $this->post('/login', [
+            'login' => '089999999999',
+            'password' => '123456',
+        ]);
+
+        $response->assertSessionHasErrors('login');
+        $this->assertGuest();
+    }
+
+    public function test_halaman_presensi_mobile_login_bisa_diakses(): void
+    {
+        $response = $this->get('/presensi');
+        $response->assertStatus(200);
+        $response->assertSee('Aplikasi Presensi Mobile');
+        $response->assertSee('Nomor HP Terdaftar');
+    }
+
+    public function test_dosen_bisa_login_ke_presensi_mobile_via_nomor_hp_dan_6_digit(): void
+    {
+        $dosen = Dosen::first();
+        $cleanPhone = preg_replace('/[^0-9]/', '', $dosen->no_hp);
+        $sixDigits = substr($cleanPhone, -6);
+
+        $response = $this->post('/presensi', [
+            'no_hp' => $dosen->no_hp,
+            'password' => $sixDigits,
+        ]);
+
+        $response->assertRedirect('/dosen/presensi-mobile');
+        $this->assertAuthenticatedAs($dosen->user);
+    }
+
+    public function test_guest_presensi_mobile_dialihkan_ke_halaman_presensi_login(): void
+    {
+        $response = $this->get('/presensi-mobile');
+        $response->assertRedirect('/presensi');
+
+        $response2 = $this->get('/dosen/presensi-mobile');
+        $response2->assertRedirect('/presensi');
+    }
 }

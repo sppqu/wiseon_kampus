@@ -13,11 +13,21 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Autentikasi & Quick Demo Switch
+// Autentikasi Admin & Web Portal Kampus
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/quick-login', [AuthController::class, 'quickLogin'])->name('quick.login');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Rute Presensi Mobile Khusus Dosen & Karyawan (Login No. HP & PIN 6 Digit Belakang)
+Route::get('/presensi', [AuthController::class, 'showMobileLogin'])->name('presensi.login');
+Route::post('/presensi', [AuthController::class, 'mobileLogin'])->name('presensi.login.post');
+Route::get('/presensi-mobile', function () {
+    if (\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->isDosen()) {
+        return redirect()->route('dosen.presensi-mobile');
+    }
+    return redirect()->route('presensi.login');
+})->name('presensi.mobile.alias');
 
 // Halaman Publik Verifikasi QR Keaslian Dokumen BKD
 Route::get('/verifikasi-bkd/{token}', [BkdPdfController::class, 'verifikasiQr'])->name('bkd.verifikasi');

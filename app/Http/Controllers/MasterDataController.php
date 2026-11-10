@@ -206,10 +206,13 @@ class MasterDataController extends Controller
             'no_hp' => 'nullable|string|max:25',
         ]);
 
+        $cleanPhone = preg_replace('/[^0-9]/', '', $request->no_hp ?? '');
+        $defaultPassword = (strlen($cleanPhone) >= 6) ? substr($cleanPhone, -6) : 'password';
+
         $user = User::create([
             'name' => trim(($request->gelar_depan ? $request->gelar_depan . ' ' : '') . $request->nama_lengkap . ($request->gelar_belakang ? ', ' . $request->gelar_belakang : '')),
             'email' => $request->email,
-            'password' => Hash::make('password'),
+            'password' => Hash::make($defaultPassword),
             'role' => 'dosen',
             'is_active' => true,
         ]);
@@ -229,7 +232,7 @@ class MasterDataController extends Controller
             'id_feeder' => (string) Str::uuid(),
         ]);
 
-        return back()->with('success', 'Dosen baru berhasil ditambahkan! Akun login otomatis dibuat dengan kata sandi default: "password".');
+        return back()->with('success', 'Dosen baru berhasil ditambahkan! Akun login otomatis dibuat dengan No. HP: ' . ($request->no_hp ?: $request->email) . ' dan Kata Sandi default: "' . $defaultPassword . '".');
     }
 
     public function updateDosen(Request $request, Dosen $dosen)
@@ -333,11 +336,14 @@ class MasterDataController extends Controller
 
             $user = User::where('email', $email)->first();
             if (!$user) {
+                $cleanPhone = preg_replace('/[^0-9]/', '', $noHp ?? '');
+                $defaultPassword = (strlen($cleanPhone) >= 6) ? substr($cleanPhone, -6) : 'password';
+
                 $namaGelarLengkap = trim(($gelarDepan ? $gelarDepan . ' ' : '') . $namaLengkap . ($gelarBelakang ? ', ' . $gelarBelakang : ''));
                 $user = User::create([
                     'name' => $namaGelarLengkap,
                     'email' => $email,
-                    'password' => Hash::make('password'),
+                    'password' => Hash::make($defaultPassword),
                     'role' => 'dosen',
                     'is_active' => true,
                 ]);
