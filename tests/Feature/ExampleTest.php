@@ -46,12 +46,15 @@ class ExampleTest extends TestCase
 
     public function test_perguruan_tinggi_dapat_diedit_manual(): void
     {
+        \Illuminate\Support\Facades\Storage::fake('public');
         $user = User::first();
+        $fakeLogo = \Illuminate\Http\UploadedFile::fake()->image('logo_kampus.png', 200, 200);
 
         $response = $this->actingAs($user)->post('/master/perguruan-tinggi/update', [
             'nama_pt' => 'Universitas Teknologi Nusantara Update',
             'kode_pt' => '031001',
             'singkatan' => 'UTN',
+            'logo' => $fakeLogo,
             'akreditasi' => 'Unggul (BAN-PT)',
             'sk_pendirian' => 'SK Mendikbud No. 142/E/O/2012',
             'tanggal_sk' => '2012-08-12',
@@ -63,9 +66,27 @@ class ExampleTest extends TestCase
         ]);
 
         $response->assertSessionHas('success');
-        $this->assertDatabaseHas('perguruan_tinggis', [
-            'nama_pt' => 'Universitas Teknologi Nusantara Update',
+        $pt = \App\Models\PerguruanTinggi::first();
+        $this->assertEquals('Universitas Teknologi Nusantara Update', $pt->nama_pt);
+        $this->assertNotNull($pt->logo);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($pt->logo);
+
+        // Bersihkan logo dummy setelah test
+        $this->actingAs($user)->post('/master/perguruan-tinggi/update', [
+            'nama_pt' => 'Universitas Teknologi Nusantara',
+            'kode_pt' => '031001',
+            'singkatan' => 'UTN',
+            'hapus_logo' => 1,
+            'akreditasi' => 'Unggul (BAN-PT)',
+            'sk_pendirian' => 'SK Mendikbud No. 142/E/O/2012',
+            'tanggal_sk' => '2012-08-12',
+            'nama_rektor' => 'Prof. Dr. H. Faisal Anwar, M.Eng.',
+            'email' => 'info@kampus.ac.id',
+            'telepon' => '(021) 789-0123',
+            'website' => 'https://kampus.ac.id',
+            'alamat' => 'Jl. Kampus Merdeka No. 101, Gedung Perkuliahan Terpadu',
         ]);
+        $this->assertNull($pt->fresh()->logo);
     }
 
     public function test_fakultas_bisa_ditambah_dan_diedit(): void

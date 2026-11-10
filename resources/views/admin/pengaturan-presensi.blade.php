@@ -78,6 +78,24 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="pt-2 border-t border-slate-100">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-bold text-slate-700 uppercase">Zona Waktu Sistem (Timezone)</label>
+                        <span class="text-[11px] font-mono bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold border border-indigo-200">
+                            <i class="fa-regular fa-clock mr-1"></i>Server: {{ now()->format('H:i:s') }}
+                        </span>
+                    </div>
+                    <select name="timezone" required
+                        class="w-full py-2.5 px-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white font-medium">
+                        @php $tzSelected = old('timezone', $settings['timezone'] ?? config('app.timezone', 'Asia/Jakarta')); @endphp
+                        <option value="Asia/Jakarta" {{ $tzSelected === 'Asia/Jakarta' ? 'selected' : '' }}>Asia/Jakarta (WIB - Waktu Indonesia Barat / UTC+7)</option>
+                        <option value="Asia/Makassar" {{ $tzSelected === 'Asia/Makassar' ? 'selected' : '' }}>Asia/Makassar (WITA - Waktu Indonesia Tengah / UTC+8)</option>
+                        <option value="Asia/Jayapura" {{ $tzSelected === 'Asia/Jayapura' ? 'selected' : '' }}>Asia/Jayapura (WIT - Waktu Indonesia Timur / UTC+9)</option>
+                        <option value="UTC" {{ $tzSelected === 'UTC' ? 'selected' : '' }}>UTC (Coordinated Universal Time / UTC+0)</option>
+                    </select>
+                    <p class="text-[11px] text-slate-400 mt-1">Berlaku sebagai acuan waktu resmi pencatatan jam masuk, jam pulang, dan keterlambatan seluruh sistem.</p>
+                </div>
             </div>
 
             <!-- Card 2: Geofencing GPS Kampus -->

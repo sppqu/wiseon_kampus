@@ -15,6 +15,7 @@ use App\Models\KelasKuliah;
 use App\Models\FeederConfig;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class MasterDataController extends Controller
@@ -51,6 +52,7 @@ class MasterDataController extends Controller
             'nama_pt' => 'required|string|max:255',
             'kode_pt' => 'required|string|max:50',
             'singkatan' => 'nullable|string|max:50',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:2048',
             'akreditasi' => 'required|string|max:50',
             'sk_pendirian' => 'required|string|max:255',
             'tanggal_sk' => 'nullable|date',
@@ -61,6 +63,22 @@ class MasterDataController extends Controller
             'website' => 'required|url|max:255',
             'alamat' => 'required|string',
         ]);
+
+        unset($validated['logo']);
+
+        if ($request->boolean('hapus_logo')) {
+            if ($pt->logo && Storage::disk('public')->exists($pt->logo)) {
+                Storage::disk('public')->delete($pt->logo);
+            }
+            $validated['logo'] = null;
+        }
+
+        if ($request->hasFile('logo')) {
+            if ($pt->logo && Storage::disk('public')->exists($pt->logo)) {
+                Storage::disk('public')->delete($pt->logo);
+            }
+            $validated['logo'] = $request->file('logo')->store('logos', 'public');
+        }
 
         $pt->update($validated);
 

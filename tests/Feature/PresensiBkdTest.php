@@ -142,8 +142,10 @@ class PresensiBkdTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Pengaturan Kebijakan Presensi', false);
         $response->assertSee('Geofencing GPS Kampus', false);
+        $response->assertSee('Zona Waktu Sistem (Timezone)', false);
 
         $postResponse = $this->actingAs($admin)->post('/admin/pengaturan-presensi/update', [
+            'timezone' => 'Asia/Makassar',
             'radius_meter' => 250,
             'radius_kantor_meter' => 200,
             'jam_masuk_kantor' => '08:00',
@@ -159,6 +161,24 @@ class PresensiBkdTest extends TestCase
         ]);
 
         $postResponse->assertSessionHas('success');
+        $this->assertEquals('Asia/Makassar', config('app.timezone'));
+
+        // Kembalikan ke Asia/Jakarta setelah test
+        $this->actingAs($admin)->post('/admin/pengaturan-presensi/update', [
+            'timezone' => 'Asia/Jakarta',
+            'radius_meter' => 250,
+            'radius_kantor_meter' => 200,
+            'jam_masuk_kantor' => '08:00',
+            'jam_pulang_kantor' => '16:00',
+            'toleransi_menit_kantor' => 15,
+            'minimal_hadir_persen' => 80,
+            'target_pertemuan_bkd' => 16,
+            'toleransi_menit' => 20,
+            'wajib_foto_bukti' => 1,
+            'mode_geofencing' => 'strict',
+            'kampus_lat' => -6.2088,
+            'kampus_lon' => 106.8456,
+        ]);
     }
 
     public function test_dosen_bisa_presensi_masuk_dan_pulang_kantor(): void

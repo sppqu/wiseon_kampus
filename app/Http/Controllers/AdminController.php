@@ -363,6 +363,7 @@ class AdminController extends Controller
     {
         $settingsPath = storage_path('app/settings_presensi.json');
         $defaultSettings = [
+            'timezone' => config('app.timezone', 'Asia/Jakarta'),
             'radius_meter' => 200,
             'radius_kantor_meter' => 200,
             'jam_masuk_kantor' => '08:00',
@@ -389,6 +390,7 @@ class AdminController extends Controller
     public function updatePengaturanPresensi(Request $request)
     {
         $request->validate([
+            'timezone' => 'nullable|in:Asia/Jakarta,Asia/Makassar,Asia/Jayapura,UTC',
             'radius_meter' => 'required|numeric|min:10|max:2000',
             'radius_kantor_meter' => 'required|numeric|min:10|max:2000',
             'jam_masuk_kantor' => 'required|string',
@@ -402,7 +404,10 @@ class AdminController extends Controller
             'kampus_lon' => 'required|numeric',
         ]);
 
+        $timezone = $request->input('timezone', config('app.timezone', 'Asia/Jakarta'));
+
         $settings = [
+            'timezone' => $timezone,
             'radius_meter' => (int)$request->radius_meter,
             'radius_kantor_meter' => (int)$request->radius_kantor_meter,
             'jam_masuk_kantor' => $request->jam_masuk_kantor,
@@ -419,7 +424,10 @@ class AdminController extends Controller
 
         file_put_contents(storage_path('app/settings_presensi.json'), json_encode($settings, JSON_PRETTY_PRINT));
 
-        return back()->with('success', 'Pengaturan kebijakan presensi perkuliahan & jam kerja kantor berhasil disimpan.');
+        config(['app.timezone' => $timezone]);
+        date_default_timezone_set($timezone);
+
+        return back()->with('success', 'Pengaturan kebijakan presensi, zona waktu (' . $timezone . '), dan jam kerja kantor berhasil disimpan.');
     }
 
     public function presensiHarianDosen(Request $request)

@@ -15,6 +15,7 @@ class PerguruanTinggi extends Model
         'kode_pt',
         'nama_pt',
         'singkatan',
+        'logo',
         'akreditasi',
         'sk_pendirian',
         'tanggal_sk',
@@ -31,5 +32,10 @@ class PerguruanTinggi extends Model
         return [
             'tanggal_sk' => 'date',
         ];
+    }
+
+    public function getLogoUrlAttribute(): ?string
+    {
+        return $this->logo ? asset('storage/' . $this->logo) : null;
     }
 }

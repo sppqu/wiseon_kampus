@@ -31,19 +31,30 @@
     <div class="w-full max-w-md bg-white min-h-screen flex flex-col justify-between shadow-2xl relative">
 
         <!-- Top Header Mobile App -->
+        @php
+            $ptMobile = \App\Models\PerguruanTinggi::first();
+            $tzMap = ['Asia/Jakarta' => 'WIB', 'Asia/Makassar' => 'WITA', 'Asia/Jayapura' => 'WIT', 'UTC' => 'UTC'];
+            $tzLabel = $tzMap[config('app.timezone')] ?? config('app.timezone');
+        @endphp
         <div>
             <header class="bg-gradient-to-r from-[#113f6c] via-[#154e85] to-[#1e61a3] text-white p-5 pt-7 pb-6 rounded-b-[2rem] shadow-lg relative">
                 <div class="flex items-center gap-3.5">
-                    <div class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-amber-300 font-extrabold text-xl shadow-inner">
-                        <i class="fa-solid fa-graduation-cap"></i>
-                    </div>
+                    @if($ptMobile && $ptMobile->logo)
+                        <div class="w-12 h-12 rounded-2xl bg-white p-1.5 flex items-center justify-center shadow-md overflow-hidden shrink-0">
+                            <img src="{{ asset('storage/' . $ptMobile->logo) }}" alt="Logo Kampus" class="w-full h-full object-contain">
+                        </div>
+                    @else
+                        <div class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-amber-300 font-extrabold text-xl shadow-inner shrink-0">
+                            <i class="fa-solid fa-graduation-cap"></i>
+                        </div>
+                    @endif
                     <div>
                         <div class="flex items-center gap-1.5">
                             <span class="text-[10px] text-amber-300 font-extrabold uppercase tracking-wider">Aplikasi Presensi Mobile</span>
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
                         </div>
                         <h1 class="text-base font-extrabold text-white leading-tight">Presensi Dosen & Karyawan</h1>
-                        <div class="text-[11px] text-blue-200">Universitas Teknologi Nusantara</div>
+                        <div class="text-[11px] text-blue-200">{{ $ptMobile->nama_pt ?? 'Universitas Teknologi Nusantara' }}</div>
                     </div>
                 </div>
 
@@ -54,7 +65,7 @@
                             {{ now()->locale('id')->isoFormat('dddd, D MMMM Y') }}
                         </div>
                         <div class="text-xl font-black font-mono text-amber-300 tracking-tight" id="liveClock">
-                            {{ now()->format('H:i:s') }} WIB
+                            {{ now()->format('H:i:s') }} {{ $tzLabel }}
                         </div>
                     </div>
                     <div class="text-right">
@@ -203,7 +214,7 @@
             const s = String(now.getSeconds()).padStart(2, '0');
             const clockEl = document.getElementById('liveClock');
             if (clockEl) {
-                clockEl.textContent = `${h}:${m}:${s} WIB`;
+                clockEl.textContent = `${h}:${m}:${s} {{ $tzLabel }}`;
             }
         }
         setInterval(updateLiveClock, 1000);

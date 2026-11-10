@@ -67,16 +67,23 @@
         <aside id="sidebar" class="w-64 bg-[#154e85] text-white flex-shrink-0 flex flex-col shadow-xl z-30 transition-transform duration-300 md:translate-x-0 -translate-x-full fixed md:static inset-y-0 left-0">
             
             <!-- Logo & Identitas Kampus -->
+            @php $ptSidebar = \App\Models\PerguruanTinggi::first(); @endphp
             <div class="p-4 bg-[#113f6c] border-b border-[#1b5b99] flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-200 text-[#154e85] font-black text-xl flex items-center justify-center shadow-md">
-                        W
-                    </div>
+                    @if($ptSidebar && $ptSidebar->logo)
+                        <div class="w-9 h-9 rounded-xl bg-white p-1 flex items-center justify-center shadow-md overflow-hidden shrink-0">
+                            <img src="{{ asset('storage/' . $ptSidebar->logo) }}" alt="Logo Kampus" class="w-full h-full object-contain">
+                        </div>
+                    @else
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-400 to-amber-200 text-[#154e85] font-black text-xl flex items-center justify-center shadow-md shrink-0">
+                            W
+                        </div>
+                    @endif
                     <div>
                         <div class="font-extrabold text-base tracking-tight text-white leading-tight">
                             WiseOn <span class="text-amber-300 text-xs font-semibold px-1.5 py-0.5 bg-amber-400/20 rounded">Kampus</span>
                         </div>
-                        <div class="text-[10px] text-blue-200">Presensi & BKD SISTER</div>
+                        <div class="text-[10px] text-blue-200 truncate max-w-[140px]">{{ $ptSidebar->singkatan ?? 'Presensi & BKD SISTER' }}</div>
                     </div>
                 </div>
                 <!-- Tombol tutup mobile -->

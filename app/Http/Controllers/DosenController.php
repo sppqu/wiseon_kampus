@@ -22,6 +22,7 @@ class DosenController extends Controller
     {
         $settingsPath = storage_path('app/settings_presensi.json');
         $defaultSettings = [
+            'timezone' => config('app.timezone', 'Asia/Jakarta'),
             'radius_meter' => 200,
             'radius_kantor_meter' => 200,
             'jam_masuk_kantor' => '08:00',

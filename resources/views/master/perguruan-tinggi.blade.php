@@ -22,10 +22,19 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Logo & Kartu Utama -->
         <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm text-center space-y-4">
-            <div class="w-24 h-24 mx-auto rounded-3xl bg-[#154e85] text-amber-300 text-4xl font-black flex items-center justify-center shadow-lg shadow-blue-900/20">
-                {{ $pt->singkatan ?: 'UTN' }}
-            </div>
+            @if($pt->logo)
+                <div class="w-24 h-24 mx-auto rounded-3xl bg-white border border-slate-200 p-2 shadow-lg flex items-center justify-center overflow-hidden">
+                    <img src="{{ asset('storage/' . $pt->logo) }}" alt="Logo {{ $pt->nama_pt }}" class="w-full h-full object-contain">
+                </div>
+            @else
+                <div class="w-24 h-24 mx-auto rounded-3xl bg-[#154e85] text-amber-300 text-4xl font-black flex items-center justify-center shadow-lg shadow-blue-900/20">
+                    {{ $pt->singkatan ?: 'UTN' }}
+                </div>
+            @endif
             <div>
+                <button type="button" onclick="openModal('modalEditPt')" class="text-[11px] font-bold text-[#154e85] hover:underline inline-flex items-center gap-1 mb-1">
+                    <i class="fa-solid fa-camera"></i> {{ $pt->logo ? 'Ganti Logo Kampus' : 'Unggah Logo Kampus' }}
+                </button>
                 <h2 class="text-lg font-bold text-slate-900">{{ $pt->nama_pt }}</h2>
                 <div class="text-xs text-slate-500 font-mono mt-0.5">Kode PT: <strong>{{ $pt->kode_pt }}</strong></div>
                 <div class="mt-2 inline-block bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold px-3 py-0.5 rounded-full">
@@ -143,8 +152,37 @@
             </button>
         </div>
 
-        <form action="{{ route('master.perguruan-tinggi.update') }}" method="POST" class="p-6 space-y-4 text-xs">
+        <form action="{{ route('master.perguruan-tinggi.update') }}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4 text-xs">
             @csrf
+
+            <!-- Upload Logo Kampus -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center gap-4">
+                <div class="w-16 h-16 rounded-2xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-sm" id="logoPreviewWrapper">
+                    @if($pt->logo)
+                        <img src="{{ asset('storage/' . $pt->logo) }}" alt="Preview Logo" id="logoPreviewImg" class="w-full h-full object-contain p-1">
+                    @else
+                        <div id="logoPreviewFallback" class="w-full h-full bg-[#154e85] text-amber-300 font-black text-lg flex items-center justify-center">
+                            {{ $pt->singkatan ?: 'UTN' }}
+                        </div>
+                        <img src="" alt="Preview Logo" id="logoPreviewImg" class="w-full h-full object-contain p-1 hidden">
+                    @endif
+                </div>
+                <div class="flex-1 w-full space-y-1.5">
+                    <label class="block font-bold text-slate-700 uppercase">Logo Resmi Perguruan Tinggi</label>
+                    <input type="file" name="logo" id="logoInput" accept="image/*" onchange="previewLogoFile(this)"
+                        class="w-full text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#154e85] file:text-white hover:file:bg-[#123e6b] cursor-pointer">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-[11px] text-slate-400">Format: PNG, JPG, WEBP, SVG (Maks. 2MB).</span>
+                        @if($pt->logo)
+                            <label class="inline-flex items-center gap-1.5 text-rose-600 font-semibold cursor-pointer">
+                                <input type="checkbox" name="hapus_logo" value="1" class="rounded border-slate-300 text-rose-600 focus:ring-rose-500">
+                                <span>Hapus logo saat ini</span>
+                            </label>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div class="sm:col-span-2">
                     <label class="block font-bold text-slate-700 uppercase mb-1">Nama Perguruan Tinggi *</label>
@@ -239,6 +277,22 @@
     }
     function closeModal(id) {
         document.getElementById(id).classList.add('hidden');
+    }
+    function previewLogoFile(input) {
+        if (!input.files || !input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = document.getElementById('logoPreviewImg');
+            const fallback = document.getElementById('logoPreviewFallback');
+            if (img) {
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+            }
+            if (fallback) {
+                fallback.classList.add('hidden');
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
     }
 </script>
 @endsection

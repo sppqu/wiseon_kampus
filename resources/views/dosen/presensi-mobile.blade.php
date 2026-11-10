@@ -58,12 +58,19 @@
     <div class="w-full max-w-md bg-slate-50 min-h-screen flex flex-col relative shadow-2xl overflow-x-hidden">
 
         <!-- Top Header Mobile App (Hanya tampil pada Beranda / Home) -->
+        @php $ptMobileHome = \App\Models\PerguruanTinggi::first(); @endphp
         <header id="mobileMainHeader" class="bg-gradient-to-r from-[#113f6c] via-[#154e85] to-[#1e61a3] text-white p-4 pt-5 pb-5 rounded-b-3xl shadow-lg relative z-20">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-amber-300 font-extrabold text-sm shadow-inner">
-                        <i class="fa-solid fa-graduation-cap text-base"></i>
-                    </div>
+                    @if($ptMobileHome && $ptMobileHome->logo)
+                        <div class="w-10 h-10 rounded-2xl bg-white p-1 flex items-center justify-center shadow-inner overflow-hidden shrink-0">
+                            <img src="{{ asset('storage/' . $ptMobileHome->logo) }}" alt="Logo Kampus" class="w-full h-full object-contain">
+                        </div>
+                    @else
+                        <div class="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-amber-300 font-extrabold text-sm shadow-inner shrink-0">
+                            <i class="fa-solid fa-graduation-cap text-base"></i>
+                        </div>
+                    @endif
                     <div>
                         <div class="flex items-center gap-1.5">
                             <span class="text-[10px] text-amber-300 font-extrabold uppercase tracking-wider">Aplikasi Presensi Kampus</span>
